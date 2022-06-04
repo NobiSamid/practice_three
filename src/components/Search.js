@@ -2,9 +2,18 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Search() {
-  const [term, setTerm] = useState("");
+  const [term, setTerm] = useState("book");
   const [debouncedTerm, setDebouncedTerm] = useState(term);
   const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedTerm(term);
+    }, 500);
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [term]);
   useEffect(() => {
     ///////////////////// possible way 1
     const search = async () => {
@@ -14,26 +23,12 @@ export default function Search() {
           list: "search",
           origin: "*",
           format: "json",
-          srsearch: term,
+          srsearch: debouncedTerm,
         },
       });
       setResults(data.query.search);
     };
-    if (term && !results.length) {
-      if (term) {
-        search();
-      }
-    } else {
-      const timeoutId = setTimeout(() => {
-        if (term) {
-          search();
-        }
-      }, 1000);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
+    search();
 
     ///// possible way 2
     // (async()=>{
@@ -45,7 +40,7 @@ export default function Search() {
     // .then((res)=>{
     //   console.log(res.data);
     // });
-  }, [term, results.length]);
+  }, [debouncedTerm]);
 
   const renderResults = results.map((result) => {
     return (
